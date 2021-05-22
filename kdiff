@@ -359,6 +359,10 @@ generate_comparisons()
 	project_path=$3
 	kicad_pcb=$4
 
+	# Workaround for windows line endings.
+	cp "${kicad_pcb}" "${kicad_pcb}.bkp" 2> /dev/null
+	dos2unix "${kicad_pcb}"
+
 	main_html=index.html
 
 	filename=$(basename -- "$kicad_pcb")
@@ -467,6 +471,7 @@ generate_comparisons()
 
 	sch_page_names=$(get_pages "${board_name}" "${current_path_fix}/${board_name}.sch" | cut -d"|" -f2)
 	board_layers=$(sed_ -n '/^  (layers/,/  )$/{/^  (layers/!{/  )$/!p}}' "${kicad_pcb}" | sed_ "s/^[ \t]\+//g" | sed_ "s/[()]//g" | cut -d" " -f2 | tr "." "_")
+	board_layers=$(echo "$board_layers" | sed_ "s/\r$//g")
 
 	if [[ "${VERBOSE}" == "1" ]]; then
 		echo "Schematic Pages"
@@ -698,6 +703,9 @@ generate_comparisons()
 	# Insert layers list
 	board_layers=$(sed_ -n '/^  (layers/,/  )$/{/^  (layers/!{/  )$/!p}}' "${kicad_pcb}" | sed_ "s/^[ \t]\+//g" | sed_ "s/[()]//g" | cut -d" " -f2)
 	insert_layers "${web_dir}/${main_html}" "$board_layers"
+
+	# Restore board
+	cp "${kicad_pcb}.bkp" "${kicad_pcb}" 2> /dev/null
 }
 
 
